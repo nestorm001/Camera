@@ -10,21 +10,30 @@ import android.view.SurfaceView;
 import java.io.IOException;
 
 import rx.Observable;
+import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
+
+import static nesto.camera.OnChangeListener.OnChangeEvent.SWITCH_CAMERA;
+import static nesto.camera.OnChangeListener.OnChangeEvent.SWITCH_FLASH_MODE;
 
 /**
  * Created on 2017/2/20.
  * By nesto
  */
 
-@SuppressWarnings("deprecation")
+@SuppressWarnings({"deprecation", "unused"})
 public class CameraView extends SurfaceView implements SurfaceHolder.Callback {
 
     private SurfaceHolder holder;
     private Camera camera;
     private boolean surfaceCreated;
     private boolean cameraReleased;
+
+    private boolean useFrontCamera = false;
+
+    private OnChangeListener onChangeListener;
+    private Subscription onChangeSubscription;
 
     public CameraView(Context context) {
         this(context, null);
@@ -35,6 +44,36 @@ public class CameraView extends SurfaceView implements SurfaceHolder.Callback {
 
         holder = getHolder();
         holder.addCallback(this);
+
+        initOnChangeListener();
+    }
+
+    private void initOnChangeListener() {
+        onChangeSubscription = Observable.create(
+                (Observable.OnSubscribe<OnChangeListener.OnChangeEvent>) subscriber ->
+                        onChangeListener = new OnChangeListener() {
+                            @Override public void switchCamera() {
+                                subscriber.onNext(SWITCH_CAMERA);
+                            }
+
+                            @Override public void switchFlashMode() {
+                                subscriber.onNext(SWITCH_FLASH_MODE);
+                            }
+                        }).subscribeOn(Schedulers.io())
+                .observeOn(Schedulers.io())
+                .subscribe(onChangeEvent -> {
+                    switch (onChangeEvent) {
+                        case SWITCH_CAMERA:
+                            useFrontCamera = !useFrontCamera;
+                            stopCamera();
+                            openCamera();
+                            break;
+                        case SWITCH_FLASH_MODE:
+                            break;
+                        default:
+                            break;
+                    }
+                }, Throwable::printStackTrace);
     }
 
     @Override public void surfaceCreated(SurfaceHolder holder) {
@@ -51,30 +90,21 @@ public class CameraView extends SurfaceView implements SurfaceHolder.Callback {
     @Override public void surfaceDestroyed(SurfaceHolder holder) {
         Log.d("wtf", "surfaceDestroyed");
         surfaceCreated = false;
-        if (holder.getSurface() == null) return;
-
-        // stop preview before making changes
-        stopPreview();
-
-        // set preview size and make any resize, rotate or
-        // reformatting changes here
-        // TODO do something
-
-        // start preview with new settings
-        startPreview();
     }
 
     public synchronized void stopCamera() {
-        if (camera != null) {
-            camera.stopPreview();
-            camera.release();
-            cameraReleased = true;
-        }
+        if (camera == null || cameraReleased) return;
+
+        camera.stopPreview();
+        camera.release();
+        cameraReleased = true;
     }
 
     public synchronized void openCamera() {
         Observable.create((Observable.OnSubscribe<Camera>) subscriber
-                -> subscriber.onNext(CameraHelper.getCameraInstance()))
+                -> subscriber.onNext(useFrontCamera
+                ? CameraHelper.getFrontCamera()
+                : CameraHelper.getBackCamera()))
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(camera -> {
@@ -104,6 +134,25 @@ public class CameraView extends SurfaceView implements SurfaceHolder.Callback {
             camera.startPreview();
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    public void switchCamera() {
+        onChangeListener.switchCamera();
+    }
+
+    public CameraView useFrontCamera(boolean useFrontCamera) {
+        this.useFrontCamera = useFrontCamera;
+        return this;
+    }
+
+    public boolean useFrontCamera() {
+        return useFrontCamera;
+    }
+
+    public void release() {
+        if (onChangeSubscription != null && !onChangeSubscription.isUnsubscribed()) {
+            onChangeSubscription.unsubscribe();
         }
     }
 }

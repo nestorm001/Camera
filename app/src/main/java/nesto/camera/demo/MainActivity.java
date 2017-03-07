@@ -2,6 +2,7 @@ package nesto.camera.demo;
 
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.view.View;
 
 import nesto.camera.CameraView;
 
@@ -24,5 +25,14 @@ public class MainActivity extends AppCompatActivity {
     @Override protected void onPause() {
         super.onPause();
         cameraView.stopCamera();
+    }
+
+    public void switchCamera(View view) {
+        cameraView.switchCamera();
+    }
+
+    @Override protected void onDestroy() {
+        super.onDestroy();
+        cameraView.release();
     }
 }

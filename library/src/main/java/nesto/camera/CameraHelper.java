@@ -16,13 +16,21 @@ import android.hardware.Camera;
         return context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA);
     }
 
-    public static Camera getCameraInstance() {
-        Camera camera = null;
-        try {
-            camera = Camera.open();
-        } catch (Exception e) {
-            e.printStackTrace();
+    public static Camera getFrontCamera() {
+        return getCamera(Camera.CameraInfo.CAMERA_FACING_FRONT);
+    }
+
+    public static Camera getBackCamera() {
+        return getCamera(Camera.CameraInfo.CAMERA_FACING_BACK);
+    }
+
+    private static Camera getCamera(int facing) {
+        int numberOfCameras = Camera.getNumberOfCameras();
+        Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
+        for (int i = 0; i < numberOfCameras; i++) {
+            Camera.getCameraInfo(i, cameraInfo);
+            if (cameraInfo.facing == facing) return Camera.open(i);
         }
-        return camera;
+        return null;
     }
 }
