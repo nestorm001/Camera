@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout
+<nesto.camera.CameraView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/holder"
@@ -7,4 +7,4 @@
     android:layout_height="match_parent"
     tools:context="nesto.camera.demo.MainActivity">
     
-</FrameLayout>
+</nesto.camera.CameraView>

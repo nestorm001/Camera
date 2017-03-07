@@ -2,6 +2,7 @@ package nesto.camera;
 
 import android.content.Context;
 import android.hardware.Camera;
+import android.util.AttributeSet;
 import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -10,7 +11,6 @@ import java.io.IOException;
 
 import rx.Observable;
 import rx.android.schedulers.AndroidSchedulers;
-import rx.exceptions.Exceptions;
 import rx.schedulers.Schedulers;
 
 /**
@@ -21,29 +21,27 @@ import rx.schedulers.Schedulers;
 @SuppressWarnings("deprecation")
 public class CameraView extends SurfaceView implements SurfaceHolder.Callback {
 
-    private SurfaceHolder mHolder;
+    private SurfaceHolder holder;
     private Camera camera;
     private boolean surfaceCreated;
     private boolean cameraReleased;
 
     public CameraView(Context context) {
-        super(context);
-        mHolder = getHolder();
-        mHolder.addCallback(this);
+        this(context, null);
+    }
+
+    public CameraView(Context context, AttributeSet attrs) {
+        super(context, attrs);
+
+        holder = getHolder();
+        holder.addCallback(this);
     }
 
     @Override public void surfaceCreated(SurfaceHolder holder) {
         Log.d("wtf", "surfaceCreated");
-        Log.d("wtf", holder.toString() + " " + mHolder.toString());
         surfaceCreated = true;
-        try {
-            if (camera != null && !cameraReleased) {
-                camera.setPreviewDisplay(holder);
-                camera.startPreview();
-            }
-        } catch (IOException | NullPointerException e) {
-            e.printStackTrace();
-        }
+        startPreview();
+
     }
 
     @Override public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
@@ -53,30 +51,17 @@ public class CameraView extends SurfaceView implements SurfaceHolder.Callback {
     @Override public void surfaceDestroyed(SurfaceHolder holder) {
         Log.d("wtf", "surfaceDestroyed");
         surfaceCreated = false;
-        // If your preview can change or rotate, take care of those events here.
-        // Make sure to stop the preview before resizing or reformatting it.
-
-        if (mHolder.getSurface() == null) {
-            // preview surface does not exist
-            return;
-        }
+        if (holder.getSurface() == null) return;
 
         // stop preview before making changes
-        try {
-            camera.stopPreview();
-        } catch (Exception e) {
-            // ignore: tried to stop a non-existent preview
-        }
+        stopPreview();
 
         // set preview size and make any resize, rotate or
         // reformatting changes here
+        // TODO do something
 
         // start preview with new settings
-        try {
-            startPreview();
-        } catch (Exception e) {
-            Log.d("wtf", "Error starting camera preview: " + e.getMessage());
-        }
+        startPreview();
     }
 
     public synchronized void stopCamera() {
@@ -98,20 +83,27 @@ public class CameraView extends SurfaceView implements SurfaceHolder.Callback {
                     cameraReleased = false;
                     if (surfaceCreated) {
                         Log.d("wtf", "setPreviewDisplay");
-                        try {
-                            startPreview();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                            throw Exceptions.propagate(e);
-                        }
+                        startPreview();
                     }
                 }, Throwable::printStackTrace);
     }
 
-    private void startPreview() throws IOException {
-        if (cameraReleased) return;
+    private void stopPreview() {
+        if (camera == null || cameraReleased) return;
+        try {
+            camera.stopPreview();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
-        camera.setPreviewDisplay(mHolder);
-        camera.startPreview();
+    private void startPreview() {
+        if (camera == null || cameraReleased) return;
+        try {
+            camera.setPreviewDisplay(holder);
+            camera.startPreview();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
