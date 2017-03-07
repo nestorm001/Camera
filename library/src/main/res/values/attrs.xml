@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="CameraFocusView">
+        <attr name="bound_width" format="dimension" />
+        <attr name="bound_color" format="color" />
+    </declare-styleable>
+</resources>
