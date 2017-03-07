@@ -31,6 +31,14 @@ public class MainActivity extends AppCompatActivity {
         cameraView.switchCamera();
     }
 
+    public void switchFlashMode(View view) {
+        cameraView.switchFlashMode();
+    }
+
+    public void take(View view) {
+        // TODO
+    }
+
     @Override protected void onDestroy() {
         super.onDestroy();
         cameraView.release();

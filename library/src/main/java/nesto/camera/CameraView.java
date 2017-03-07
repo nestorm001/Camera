@@ -31,6 +31,7 @@ public class CameraView extends SurfaceView implements SurfaceHolder.Callback {
     private boolean cameraReleased;
 
     private boolean useFrontCamera = false;
+    private boolean useFlashLight = false;
 
     private OnChangeListener onChangeListener;
     private Subscription onChangeSubscription;
@@ -69,18 +70,23 @@ public class CameraView extends SurfaceView implements SurfaceHolder.Callback {
                             openCamera();
                             break;
                         case SWITCH_FLASH_MODE:
+                            useFlashLight = !useFlashLight;
+                            CameraHelper.enableFlashLight(camera, useFlashLight);
+                            Log.d("wtf", "flash mode: " + camera.getParameters().getFlashMode());
                             break;
                         default:
                             break;
                     }
-                }, Throwable::printStackTrace);
+                }, (throwable) -> {
+                    throwable.printStackTrace();
+                    initOnChangeListener();
+                });
     }
 
     @Override public void surfaceCreated(SurfaceHolder holder) {
         Log.d("wtf", "surfaceCreated");
         surfaceCreated = true;
         startPreview();
-
     }
 
     @Override public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
@@ -90,14 +96,6 @@ public class CameraView extends SurfaceView implements SurfaceHolder.Callback {
     @Override public void surfaceDestroyed(SurfaceHolder holder) {
         Log.d("wtf", "surfaceDestroyed");
         surfaceCreated = false;
-    }
-
-    public synchronized void stopCamera() {
-        if (camera == null || cameraReleased) return;
-
-        camera.stopPreview();
-        camera.release();
-        cameraReleased = true;
     }
 
     public synchronized void openCamera() {
@@ -118,10 +116,13 @@ public class CameraView extends SurfaceView implements SurfaceHolder.Callback {
                 }, Throwable::printStackTrace);
     }
 
-    private void stopPreview() {
+    public synchronized void stopCamera() {
         if (camera == null || cameraReleased) return;
+
         try {
             camera.stopPreview();
+            camera.release();
+            cameraReleased = true;
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -137,7 +138,18 @@ public class CameraView extends SurfaceView implements SurfaceHolder.Callback {
         }
     }
 
+    private void stopPreview() {
+        if (camera == null || cameraReleased) return;
+        try {
+            camera.stopPreview();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /* methods about switch camera facing ====== start */
     public void switchCamera() {
+        if (onChangeListener == null) return;
         onChangeListener.switchCamera();
     }
 
@@ -149,6 +161,27 @@ public class CameraView extends SurfaceView implements SurfaceHolder.Callback {
     public boolean useFrontCamera() {
         return useFrontCamera;
     }
+    /* methods about switch camera facing ====== end */
+
+    /* methods about switch flash light mode ====== start */
+    public boolean useFlashLight() {
+        return useFlashLight;
+    }
+
+    public CameraView useFlashLight(boolean useFlashLight) {
+        this.useFlashLight = useFlashLight;
+        return this;
+    }
+
+    // return flash mode changed or not
+    public boolean switchFlashMode() {
+        if (camera == null || cameraReleased) return false;
+        if (useFrontCamera) return false;
+        if (onChangeListener == null) return false;
+        onChangeListener.switchFlashMode();
+        return true;
+    }
+    /* methods about switch flash light mode ====== end */
 
     public void release() {
         if (onChangeSubscription != null && !onChangeSubscription.isUnsubscribed()) {

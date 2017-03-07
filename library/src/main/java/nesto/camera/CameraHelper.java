@@ -33,4 +33,15 @@ import android.hardware.Camera;
         }
         return null;
     }
+
+    public static void enableFlashLight(Camera camera, boolean enable) {
+        try {
+            Camera.Parameters parameters = camera.getParameters();
+            parameters.setFlashMode(enable ? Camera.Parameters.FLASH_MODE_ON
+                    : Camera.Parameters.FLASH_MODE_OFF);
+            camera.setParameters(parameters);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 }
