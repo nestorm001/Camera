@@ -3,6 +3,9 @@ package nesto.camera;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.hardware.Camera;
+import android.support.annotation.NonNull;
+
+import java.util.List;
 
 /**
  * Created on 2017/2/20.
@@ -42,6 +45,15 @@ import android.hardware.Camera;
             camera.setParameters(parameters);
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    public static void setAutoFocus(@NonNull Camera camera) {
+        Camera.Parameters parameters = camera.getParameters();
+        List<String> focusModes = parameters.getSupportedFocusModes();
+        if (focusModes.contains(Camera.Parameters.FOCUS_MODE_AUTO)) {
+            parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);
+            camera.setParameters(parameters);
         }
     }
 }

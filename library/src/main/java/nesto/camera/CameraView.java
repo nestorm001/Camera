@@ -1,13 +1,18 @@
 package nesto.camera;
 
 import android.content.Context;
+import android.graphics.Rect;
 import android.hardware.Camera;
+import android.support.annotation.NonNull;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import rx.Observable;
 import rx.Subscription;
@@ -23,7 +28,7 @@ import static nesto.camera.OnChangeListener.OnChangeEvent.SWITCH_FLASH_MODE;
  */
 
 @SuppressWarnings({"deprecation", "unused"})
-public class CameraView extends SurfaceView implements SurfaceHolder.Callback {
+public class CameraView extends SurfaceView implements SurfaceHolder.Callback, Camera.AutoFocusCallback {
 
     private SurfaceHolder holder;
     private Camera camera;
@@ -32,6 +37,8 @@ public class CameraView extends SurfaceView implements SurfaceHolder.Callback {
 
     private boolean useFrontCamera = false;
     private boolean useFlashLight = false;
+    private int cameraRotation;
+    private OnFocusListener onFocusListener;
 
     private OnChangeListener onChangeListener;
     private Subscription onChangeSubscription;
@@ -108,6 +115,7 @@ public class CameraView extends SurfaceView implements SurfaceHolder.Callback {
                 .subscribe(camera -> {
                     Log.d("wtf", "open camera");
                     this.camera = camera;
+                    camera.autoFocus(this);
                     cameraReleased = false;
                     if (surfaceCreated) {
                         Log.d("wtf", "setPreviewDisplay");
@@ -182,6 +190,55 @@ public class CameraView extends SurfaceView implements SurfaceHolder.Callback {
         return true;
     }
     /* methods about switch flash light mode ====== end */
+
+    /* methods about focus ====== start */
+    @Override public boolean onTouchEvent(@NonNull MotionEvent event) {
+        switch (event.getAction() & MotionEvent.ACTION_MASK) {
+            case MotionEvent.ACTION_DOWN://单点按下
+                focusOnTouch(event);
+                return true;
+            default:
+                break;
+        }
+        return super.onTouchEvent(event);
+    }
+
+    private void focusOnTouch(MotionEvent event) {
+        try {
+            CameraHelper.setAutoFocus(camera);
+            if (onFocusListener != null) {
+                onFocusListener.onStartFocus(event.getX(), event.getY());
+            }
+
+            Camera.Parameters parameters = camera.getParameters();
+            Rect focusRect = FocusHelper.tapEventToFocusArea(event, useFrontCamera,
+                    cameraRotation, this, 1f);
+            if (parameters.getMaxNumFocusAreas() > 0) {
+                List<Camera.Area> focusAreas = new ArrayList<>();
+                focusAreas.add(new Camera.Area(focusRect, 1000));
+                parameters.setFocusAreas(focusAreas);
+            }
+
+            Rect meteringRect = FocusHelper.tapEventToFocusArea(event, useFrontCamera,
+                    cameraRotation, this, 1.5f);
+            if (parameters.getMaxNumMeteringAreas() > 0) {
+                List<Camera.Area> meteringAreas = new ArrayList<>();
+                meteringAreas.add(new Camera.Area(meteringRect, 1000));
+                parameters.setMeteringAreas(meteringAreas);
+            }
+
+            camera.setParameters(parameters);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override public void onAutoFocus(boolean success, Camera camera) {
+        if (onFocusListener == null) return;
+        Log.d("wtf", "onAutoFocus");
+        onFocusListener.onEndFocus();
+    }
+    /* methods about focus ====== start */
 
     public void release() {
         if (onChangeSubscription != null && !onChangeSubscription.isUnsubscribed()) {
