@@ -2,8 +2,8 @@ package nesto.camera;
 
 import android.app.Activity;
 import android.graphics.Point;
+import android.util.DisplayMetrics;
 import android.util.Log;
-import android.view.Display;
 import android.view.ViewGroup;
 
 /**
@@ -15,15 +15,18 @@ public class PreviewAutoFullScreenListener implements OnPreviewSizeChangeListene
 
     private boolean isPortrait;
     private CameraPreview cameraPreview;
-    private int viewWidth = CameraHelper.SCREEN_WIDTH;
-    private int viewHeight = CameraHelper.SCREEN_HEIGHT;
+    private int viewWidth;
+    private int viewHeight;
 
     public PreviewAutoFullScreenListener(Activity activity, CameraPreview cameraPreview) {
-        Display display = activity.getWindowManager().getDefaultDisplay();
-        Point point = new Point();
-        display.getSize(point);
+        Point point = CameraHelper.getRealScreenSize(activity);
         isPortrait = point.x < point.y;
+        viewWidth = Math.min(point.x, point.y);
+        viewHeight = Math.max(point.x, point.y);
         this.cameraPreview = cameraPreview;
+
+        DisplayMetrics dm = new DisplayMetrics();
+        activity.getWindowManager().getDefaultDisplay().getMetrics(dm);
     }
 
     public PreviewAutoFullScreenListener(Activity activity, CameraPreview cameraPreview,

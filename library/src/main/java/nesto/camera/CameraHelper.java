@@ -1,10 +1,14 @@
 package nesto.camera;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
+import android.graphics.Point;
 import android.hardware.Camera;
+import android.os.Build;
 import android.support.annotation.NonNull;
+import android.view.Display;
 import android.view.Surface;
 import android.view.WindowManager;
 
@@ -21,6 +25,17 @@ import java.util.List;
     public static final int SCREEN_HEIGHT = Resources.getSystem().getDisplayMetrics().heightPixels;
 
     private CameraHelper() {}
+
+    public static Point getRealScreenSize(Activity activity) {
+        Point result = new Point();
+        Display display = activity.getWindowManager().getDefaultDisplay();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+            display.getRealSize(result);
+        } else {
+            display.getSize(result);
+        }
+        return result;
+    }
 
     public static boolean hasCamera(Context context) {
         return context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA);
@@ -60,10 +75,13 @@ import java.util.List;
         }
     }
 
-    public static void setAutoFocus(@NonNull Camera camera) {
+    public static void setFocusMode(@NonNull Camera camera, String focusMode) {
         Camera.Parameters parameters = camera.getParameters();
         List<String> focusModes = parameters.getSupportedFocusModes();
-        if (focusModes.contains(Camera.Parameters.FOCUS_MODE_AUTO)) {
+        if (focusModes.contains(focusMode)) {
+            parameters.setFocusMode(focusMode);
+            camera.setParameters(parameters);
+        } else if (focusModes.contains(Camera.Parameters.FOCUS_MODE_AUTO)) {
             parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);
             camera.setParameters(parameters);
         }

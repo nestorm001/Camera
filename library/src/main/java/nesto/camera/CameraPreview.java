@@ -1,6 +1,7 @@
 package nesto.camera;
 
 import android.content.Context;
+import android.graphics.Point;
 import android.graphics.Rect;
 import android.hardware.Camera;
 import android.support.annotation.NonNull;
@@ -20,6 +21,7 @@ import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 
 import static android.hardware.Camera.Parameters.FLASH_MODE_ON;
+import static android.hardware.Camera.Parameters.FOCUS_MODE_AUTO;
 import static nesto.camera.OnChangeListener.OnChangeEvent.SWITCH_CAMERA;
 import static nesto.camera.OnChangeListener.OnChangeEvent.SWITCH_FLASH_MODE;
 
@@ -51,6 +53,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     private Subscription onChangeSubscription;
 
     private Context context;
+    private Point realScreenSize;
 
     public CameraPreview(Context context) {
         this(context, null);
@@ -142,12 +145,13 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     }
 
     private void initCameraConfig() {
-        Log.d("wtf", "screen width " + CameraHelper.SCREEN_WIDTH + " height " + CameraHelper.SCREEN_HEIGHT);
+        CameraHelper.setFocusMode(camera, FOCUS_MODE_AUTO);
         camera.autoFocus(this);
 
         Camera.Parameters parameters = camera.getParameters();
         Camera.Size previewSize = CameraHelper.getBestPreviewSize(parameters,
-                CameraHelper.SCREEN_WIDTH, CameraHelper.SCREEN_HEIGHT);
+                realScreenSize == null ? CameraHelper.SCREEN_WIDTH : realScreenSize.x,
+                realScreenSize == null ? CameraHelper.SCREEN_HEIGHT : realScreenSize.y);
         Log.d("wtf", "previewSize width " + previewSize.width + " height " + previewSize.height);
         parameters.setPreviewSize(previewSize.width, previewSize.height);
         if (onPreviewSizeChangeListener != null) {
@@ -245,11 +249,12 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
     private void focusOnTouch(MotionEvent event) {
         try {
-            CameraHelper.setAutoFocus(camera);
             if (onFocusListener != null) {
                 onFocusListener.onStartFocus(event.getX(), event.getY());
             }
 
+            CameraHelper.setFocusMode(camera, Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
+            
             Camera.Parameters parameters = camera.getParameters();
             Rect focusRect = FocusHelper.tapEventToFocusArea(event, useFrontCamera,
                     cameraRotation, this, 1f);
@@ -258,6 +263,8 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
                 focusAreas.add(new Camera.Area(focusRect, 1000));
                 parameters.setFocusAreas(focusAreas);
             }
+
+            Log.d("wtf", "focus area " + focusRect.toString());
 
             Rect meteringRect = FocusHelper.tapEventToFocusArea(event, useFrontCamera,
                     cameraRotation, this, 1.5f);
@@ -274,8 +281,8 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     }
 
     @Override public void onAutoFocus(boolean success, Camera camera) {
-        if (onFocusListener == null) return;
         Log.d("wtf", "onAutoFocus");
+        if (onFocusListener == null) return;
         onFocusListener.onEndFocus();
     }
     /* methods about focus ====== start */
@@ -306,6 +313,10 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
     public void setOnPreviewSizeChangeListener(OnPreviewSizeChangeListener listener) {
         onPreviewSizeChangeListener = listener;
+    }
+
+    public void setRealScreenSize(Point realScreenSize) {
+        this.realScreenSize = realScreenSize;
     }
 
     public void release() {
