@@ -11,11 +11,11 @@ import android.view.View;
  * By nesto
  */
 
-public class FocusHelper {
+final class FocusHelper {
     private FocusHelper() {}
 
-    public static Rect tapEventToFocusArea(MotionEvent event, boolean mirror,
-                                           int displayOrientation, View view, float coefficient) {
+    static Rect tapEventToFocusArea(MotionEvent event, boolean mirror,
+                                    int displayOrientation, View view, float coefficient) {
         final float focusAreaSize = 200;
         float tapX = event.getX();
         float tapY = event.getY();
@@ -44,6 +44,6 @@ public class FocusHelper {
     }
 
     private static int clamp(int x, int min, int max) {
-        return Math.min(min, Math.min(x, max));
+        return Math.max(min, Math.min(x, max));
     }
 }

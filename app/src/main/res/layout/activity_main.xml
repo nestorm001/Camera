@@ -6,10 +6,11 @@
     android:layout_height="match_parent"
     tools:context="nesto.camera.demo.MainActivity">
 
-    <nesto.camera.CameraView
+    <nesto.camera.CameraPreview
         android:id="@+id/holder"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+        android:layout_height="match_parent"
+        android:layout_centerInParent="true"/>
 
     <Button
         android:layout_width="100dp"
