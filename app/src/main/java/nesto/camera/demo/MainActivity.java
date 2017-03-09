@@ -17,7 +17,7 @@ public class MainActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         cameraPreview = (CameraPreview) findViewById(R.id.holder);
-        cameraPreview.setRealScreenSize(CameraHelper.getRealScreenSize(this));
+        cameraPreview.setDesiredSize(CameraHelper.getRealScreenSize(this));
         cameraPreview.setOnPreviewSizeChangeListener(
                 new PreviewAutoFullScreenListener(this, cameraPreview));
         cameraPreview.setOnPictureTakeListener((inputStream, pictureRotation) -> {

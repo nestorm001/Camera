@@ -62,7 +62,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     private Subscription onChangeSubscription;
 
     private Context context;
-    private Point realScreenSize;
+    private Point desiredSize;
 
     public CameraPreview(Context context) {
         this(context, null);
@@ -159,8 +159,8 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
         Camera.Parameters parameters = camera.getParameters();
         Camera.Size previewSize = CameraHelper.getBestPreviewSize(parameters,
-                realScreenSize == null ? CameraHelper.SCREEN_WIDTH : realScreenSize.x,
-                realScreenSize == null ? CameraHelper.SCREEN_HEIGHT : realScreenSize.y);
+                desiredSize == null ? CameraHelper.SCREEN_WIDTH : desiredSize.x,
+                desiredSize == null ? CameraHelper.SCREEN_HEIGHT : desiredSize.y);
         Log.d("wtf", "previewSize width " + previewSize.width + " height " + previewSize.height);
         parameters.setPreviewSize(previewSize.width, previewSize.height);
         if (onPreviewSizeChangeListener != null) {
@@ -343,8 +343,8 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         onPreviewSizeChangeListener = listener;
     }
 
-    public void setRealScreenSize(Point realScreenSize) {
-        this.realScreenSize = realScreenSize;
+    public void setDesiredSize(Point desiredSize) {
+        this.desiredSize = desiredSize;
     }
 
     public void release() {

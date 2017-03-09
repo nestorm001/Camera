@@ -2,7 +2,6 @@ package nesto.camera.callback;
 
 import android.app.Activity;
 import android.graphics.Point;
-import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.ViewGroup;
 
@@ -18,41 +17,38 @@ public class PreviewAutoFullScreenListener implements OnPreviewSizeChangeListene
 
     private boolean isPortrait;
     private CameraPreview cameraPreview;
-    private int viewWidth;
-    private int viewHeight;
+    private int viewSmallerSide;
+    private int viewBiggerSide;
 
     public PreviewAutoFullScreenListener(Activity activity, CameraPreview cameraPreview) {
         Point point = CameraHelper.getRealScreenSize(activity);
         isPortrait = point.x < point.y;
-        viewWidth = Math.min(point.x, point.y);
-        viewHeight = Math.max(point.x, point.y);
+        viewSmallerSide = Math.min(point.x, point.y);
+        viewBiggerSide = Math.max(point.x, point.y);
         this.cameraPreview = cameraPreview;
-
-        DisplayMetrics dm = new DisplayMetrics();
-        activity.getWindowManager().getDefaultDisplay().getMetrics(dm);
     }
 
     public PreviewAutoFullScreenListener(Activity activity, CameraPreview cameraPreview,
                                          int smaller, int bigger) {
         this(activity, cameraPreview);
-        viewWidth = smaller;
-        viewHeight = bigger;
+        viewSmallerSide = Math.min(smaller, bigger);
+        viewBiggerSide = Math.max(smaller, bigger);
     }
 
     @Override public void onPreviewSizeChange(int width, int height) {
         ViewGroup.LayoutParams params = cameraPreview.getLayoutParams();
         int bigger = Math.max(width, height);
         int smaller = Math.min(width, height);
-        float biggerRatio = 1.f * viewHeight / bigger;
-        float smallerRatio = 1.f * viewWidth / smaller;
+        float biggerRatio = 1.f * viewBiggerSide / bigger;
+        float smallerRatio = 1.f * viewSmallerSide / smaller;
 
         int realWidth;
         int realHeight;
         if (biggerRatio > smallerRatio) {
-            realHeight = viewHeight;
+            realHeight = viewBiggerSide;
             realWidth = realHeight * smaller / bigger;
         } else {
-            realWidth = viewWidth;
+            realWidth = viewSmallerSide;
             realHeight = realWidth * bigger / smaller;
         }
 
@@ -60,6 +56,6 @@ public class PreviewAutoFullScreenListener implements OnPreviewSizeChangeListene
         params.height = isPortrait ? realHeight : realWidth;
 
         Log.d("wtf", "view width " + params.width + " height " + params.height);
-        cameraPreview.setLayoutParams(params);
+        cameraPreview.requestLayout();
     }
 }
