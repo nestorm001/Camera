@@ -11,16 +11,17 @@ import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import nesto.camera.util.CameraHelper;
 import nesto.camera.callback.CameraOrientationListener;
 import nesto.camera.callback.OnChangeListener;
 import nesto.camera.callback.OnFocusListener;
 import nesto.camera.callback.OnPictureTakeListener;
 import nesto.camera.callback.OnPreviewSizeChangeListener;
+import nesto.camera.util.CameraHelper;
 import nesto.camera.util.FocusHelper;
 import rx.Observable;
 import rx.Subscription;
@@ -47,6 +48,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     private Integer cameraId;
     private boolean surfaceCreated;
     private boolean cameraReleased;
+    private boolean pictureTakenFinished = true;
 
     private boolean useFrontCamera = false;
     private boolean useFlashLight = false;
@@ -166,7 +168,8 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
                     .onPreviewSizeChange(previewSize.width, previewSize.height);
         }
 
-        Camera.Size pictureSize = CameraHelper.getBestPictureSize(parameters);
+        Camera.Size pictureSize = CameraHelper.getBestPictureSize(parameters,
+                previewSize.width, previewSize.height);
         Log.d("wtf", "pictureSize width " + pictureSize.width + " height " + pictureSize.height);
         parameters.setPictureSize(pictureSize.width, pictureSize.height);
         camera.setParameters(parameters);
@@ -294,12 +297,24 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     }
     /* methods about focus ====== start */
 
+    /* methods about take picture ====== start */
+    public void tackPicture() {
+        if (camera != null && pictureTakenFinished) {
+            try {
+                camera.takePicture(null, null, this);
+                pictureTakenFinished = false;
+            } catch (Exception e) {
+                e.printStackTrace();
+                pictureTakenFinished = true;
+            }
+        }
+    }
+
     public int getPictureAngle() {
         Camera.CameraInfo info = new Camera.CameraInfo();
         Camera.getCameraInfo(cameraId, info);
 
         int rotation;
-        //
         int degrees = orientationListener.getRememberedOrientation();
         if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
             rotation = (info.orientation - degrees + 360) % 360;
@@ -310,9 +325,15 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     }
 
     @Override public void onPictureTaken(byte[] data, Camera camera) {
-        if (orientationListener != null) orientationListener.rememberOrientation();
-        if (onPictureTakeListener != null) onPictureTakeListener.onPictureTaken(data);
+        if (orientationListener != null && onPictureTakeListener != null) {
+            orientationListener.rememberOrientation();
+            onPictureTakeListener.onPictureTaken(new ByteArrayInputStream(data),
+                    getPictureAngle());
+        }
+        pictureTakenFinished = true;
+        startPreview();
     }
+    /* methods about take picture ====== end */
 
     public void setOnPictureTakeListener(OnPictureTakeListener onPictureTakeListener) {
         this.onPictureTakeListener = onPictureTakeListener;

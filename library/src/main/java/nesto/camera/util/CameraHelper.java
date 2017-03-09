@@ -123,9 +123,10 @@ import java.util.List;
         return getBestSize(sizes, width, height);
     }
 
-    public static Camera.Size getBestPictureSize(Camera.Parameters parameters) {
+    public static Camera.Size getBestPictureSize(Camera.Parameters parameters,
+                                                 Integer width, Integer height) {
         List<Camera.Size> sizes = parameters.getSupportedPictureSizes();
-        return getBestSize(sizes, null, null);
+        return getBestSize(sizes, width, height);
     }
 
     private static Camera.Size getBestSize(List<Camera.Size> sizes,

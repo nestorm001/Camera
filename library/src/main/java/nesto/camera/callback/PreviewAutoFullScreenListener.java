@@ -3,6 +3,7 @@ package nesto.camera.callback;
 import android.app.Activity;
 import android.graphics.Point;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.ViewGroup;
 
 import nesto.camera.util.CameraHelper;
@@ -58,6 +59,7 @@ public class PreviewAutoFullScreenListener implements OnPreviewSizeChangeListene
         params.width = isPortrait ? realWidth : realHeight;
         params.height = isPortrait ? realHeight : realWidth;
 
+        Log.d("wtf", "view width " + params.width + " height " + params.height);
         cameraPreview.setLayoutParams(params);
     }
 }

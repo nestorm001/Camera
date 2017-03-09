@@ -1,11 +1,13 @@
 package nesto.camera.demo;
 
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 
+import nesto.camera.callback.PreviewAutoFullScreenListener;
 import nesto.camera.util.CameraHelper;
 import nesto.camera.view.CameraPreview;
-import nesto.camera.callback.PreviewAutoFullScreenListener;
 
 public class MainActivity extends BaseActivity {
 
@@ -18,6 +20,14 @@ public class MainActivity extends BaseActivity {
         cameraPreview.setRealScreenSize(CameraHelper.getRealScreenSize(this));
         cameraPreview.setOnPreviewSizeChangeListener(
                 new PreviewAutoFullScreenListener(this, cameraPreview));
+        cameraPreview.setOnPictureTakeListener((inputStream, pictureRotation) -> {
+            BitmapFactory.Options oBounds = new BitmapFactory.Options();
+            oBounds.inJustDecodeBounds = true;
+            BitmapFactory.decodeStream(inputStream, null, oBounds);
+            int width = oBounds.outWidth;
+            int height = oBounds.outHeight;
+            Log.d("wtf", "photo width " + width + " height " + height);
+        });
     }
 
     @Override protected void onResume() {
@@ -39,7 +49,7 @@ public class MainActivity extends BaseActivity {
     }
 
     public void take(View view) {
-        // TODO
+        cameraPreview.tackPicture();
     }
 
     @Override protected void onDestroy() {
