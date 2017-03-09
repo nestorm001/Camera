@@ -1,4 +1,4 @@
-package nesto.camera;
+package nesto.camera.callback;
 
 import android.content.Context;
 import android.hardware.SensorManager;

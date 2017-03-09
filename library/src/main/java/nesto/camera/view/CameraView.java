@@ -1,4 +1,4 @@
-package nesto.camera;
+package nesto.camera.view;
 
 import android.content.Context;
 import android.util.AttributeSet;

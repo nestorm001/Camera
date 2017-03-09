@@ -1,4 +1,4 @@
-package nesto.camera;
+package nesto.camera.view;
 
 import android.content.Context;
 import android.content.res.TypedArray;
@@ -11,6 +11,8 @@ import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
+
+import nesto.camera.R;
 
 /**
  * Created by Jack_long on 2015/7/7.

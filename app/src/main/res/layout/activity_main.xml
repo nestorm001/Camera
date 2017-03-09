@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     tools:context="nesto.camera.demo.MainActivity">
 
-    <nesto.camera.CameraPreview
+    <nesto.camera.view.CameraPreview
         android:id="@+id/holder"
         android:layout_width="match_parent"
         android:layout_height="match_parent"

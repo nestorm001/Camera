@@ -1,4 +1,4 @@
-package nesto.camera;
+package nesto.camera.util;
 
 import android.graphics.Matrix;
 import android.graphics.Rect;
@@ -11,10 +11,10 @@ import android.view.View;
  * By nesto
  */
 
-final class FocusHelper {
+public final class FocusHelper {
     private FocusHelper() {}
 
-    static Rect tapEventToFocusArea(MotionEvent event, boolean mirror,
+    public static Rect tapEventToFocusArea(MotionEvent event, boolean mirror,
                                     int displayOrientation, View view, float coefficient) {
         final float focusAreaSize = 200;
         float tapX = event.getX();

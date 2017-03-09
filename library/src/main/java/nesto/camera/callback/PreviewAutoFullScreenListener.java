@@ -1,10 +1,12 @@
-package nesto.camera;
+package nesto.camera.callback;
 
 import android.app.Activity;
 import android.graphics.Point;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.ViewGroup;
+
+import nesto.camera.util.CameraHelper;
+import nesto.camera.view.CameraPreview;
 
 /**
  * Created on 2017/3/8.

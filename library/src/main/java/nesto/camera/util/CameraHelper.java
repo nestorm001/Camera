@@ -1,4 +1,4 @@
-package nesto.camera;
+package nesto.camera.util;
 
 import android.app.Activity;
 import android.content.Context;

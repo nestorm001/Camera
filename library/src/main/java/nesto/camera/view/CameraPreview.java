@@ -1,4 +1,4 @@
-package nesto.camera;
+package nesto.camera.view;
 
 import android.content.Context;
 import android.graphics.Point;
@@ -15,6 +15,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import nesto.camera.util.CameraHelper;
+import nesto.camera.callback.CameraOrientationListener;
+import nesto.camera.callback.OnChangeListener;
+import nesto.camera.callback.OnFocusListener;
+import nesto.camera.callback.OnPictureTakeListener;
+import nesto.camera.callback.OnPreviewSizeChangeListener;
+import nesto.camera.util.FocusHelper;
 import rx.Observable;
 import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
@@ -22,8 +29,8 @@ import rx.schedulers.Schedulers;
 
 import static android.hardware.Camera.Parameters.FLASH_MODE_ON;
 import static android.hardware.Camera.Parameters.FOCUS_MODE_AUTO;
-import static nesto.camera.OnChangeListener.OnChangeEvent.SWITCH_CAMERA;
-import static nesto.camera.OnChangeListener.OnChangeEvent.SWITCH_FLASH_MODE;
+import static nesto.camera.callback.OnChangeListener.OnChangeEvent.SWITCH_CAMERA;
+import static nesto.camera.callback.OnChangeListener.OnChangeEvent.SWITCH_FLASH_MODE;
 
 /**
  * Created on 2017/2/20.
@@ -254,7 +261,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
             }
 
             CameraHelper.setFocusMode(camera, Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
-            
+
             Camera.Parameters parameters = camera.getParameters();
             Rect focusRect = FocusHelper.tapEventToFocusArea(event, useFrontCamera,
                     cameraRotation, this, 1f);

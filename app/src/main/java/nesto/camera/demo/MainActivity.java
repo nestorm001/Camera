@@ -3,9 +3,9 @@ package nesto.camera.demo;
 import android.os.Bundle;
 import android.view.View;
 
-import nesto.camera.CameraHelper;
-import nesto.camera.CameraPreview;
-import nesto.camera.PreviewAutoFullScreenListener;
+import nesto.camera.util.CameraHelper;
+import nesto.camera.view.CameraPreview;
+import nesto.camera.callback.PreviewAutoFullScreenListener;
 
 public class MainActivity extends BaseActivity {
 
