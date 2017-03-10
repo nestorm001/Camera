@@ -11,7 +11,6 @@ import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -176,6 +175,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
         cameraRotation = CameraHelper.cameraDisplayOrientation(context, cameraId);
         camera.setDisplayOrientation(cameraRotation);
+        if (orientationListener != null) orientationListener.enable();
     }
 
     public synchronized void stopCamera() {
@@ -185,6 +185,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
             camera.stopPreview();
             camera.release();
             cameraReleased = true;
+            if (orientationListener != null) orientationListener.disable();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -327,8 +328,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     @Override public void onPictureTaken(byte[] data, Camera camera) {
         if (orientationListener != null && onPictureTakeListener != null) {
             orientationListener.rememberOrientation();
-            onPictureTakeListener.onPictureTaken(new ByteArrayInputStream(data),
-                    getPictureAngle());
+            onPictureTakeListener.onPictureTaken(data, getPictureAngle());
         }
         pictureTakenFinished = true;
         startPreview();
