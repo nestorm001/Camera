@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import nesto.camera.callback.CameraOrientationListener;
+import nesto.camera.callback.OnChangeFinishListener;
 import nesto.camera.callback.OnChangeListener;
 import nesto.camera.callback.OnFocusListener;
 import nesto.camera.callback.OnPictureTakeListener;
@@ -50,11 +51,12 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     private boolean pictureTakenFinished = true;
 
     private boolean useFrontCamera = false;
-    private boolean useFlashLight = false;
+    private Boolean useFlashLight = false;
     private int cameraRotation;
     private OnFocusListener onFocusListener;
     private OnPictureTakeListener onPictureTakeListener;
     private OnPreviewSizeChangeListener onPreviewSizeChangeListener;
+    private OnChangeFinishListener onChangeFinishListener;
     private CameraOrientationListener orientationListener;
 
     private OnChangeListener onChangeListener;
@@ -101,8 +103,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
                             break;
                         case SWITCH_FLASH_MODE:
                             CameraHelper.enableFlashLight(camera, !useFlashLight);
-                            useFlashLight = camera.getParameters().getFlashMode()
-                                    .equals(FLASH_MODE_ON);
+                            cameraModeChangeFinish();
                             break;
                         default:
                             break;
@@ -111,6 +112,18 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
                     throwable.printStackTrace();
                     initOnChangeListener();
                 });
+    }
+
+    private void cameraModeChangeFinish() {
+        String flashMode = camera.getParameters().getFlashMode();
+        if (flashMode == null) {
+            useFlashLight = null;
+        } else {
+            useFlashLight = flashMode.equals(FLASH_MODE_ON);
+        }
+        if (onChangeFinishListener != null) {
+            onChangeFinishListener.onChangeFinish(useFrontCamera, useFlashLight);
+        }
     }
 
     @Override public void surfaceCreated(SurfaceHolder holder) {
@@ -149,6 +162,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
                         Log.d("wtf", "setPreviewDisplay");
                         startPreview();
                     }
+                    cameraModeChangeFinish();
                 }, Throwable::printStackTrace);
     }
 
@@ -345,6 +359,10 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
     public void setDesiredSize(Point desiredSize) {
         this.desiredSize = desiredSize;
+    }
+
+    public void setOnChangeFinishListener(OnChangeFinishListener onChangeFinishListener) {
+        this.onChangeFinishListener = onChangeFinishListener;
     }
 
     public void release() {
