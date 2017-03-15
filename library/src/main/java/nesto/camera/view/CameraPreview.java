@@ -134,6 +134,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
     @Override public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
         Log.d("wtf", "surfaceChanged");
+        surfaceCreated = true;
     }
 
     @Override public void surfaceDestroyed(SurfaceHolder holder) {
@@ -168,7 +169,11 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
     private void initCameraConfig() {
         CameraHelper.setFocusMode(camera, FOCUS_MODE_AUTO);
-        camera.autoFocus(this);
+        try {
+            camera.autoFocus(this);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         Camera.Parameters parameters = camera.getParameters();
         Camera.Size previewSize = CameraHelper.getBestPreviewSize(parameters,
