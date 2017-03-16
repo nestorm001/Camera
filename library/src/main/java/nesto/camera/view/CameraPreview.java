@@ -158,6 +158,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
                         Log.d("wtf", "setPreviewDisplay");
                         startPreview();
                     }
+                    cameraModeChangeFinish();
                 }, Throwable::printStackTrace);
     }
 
@@ -168,7 +169,6 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         cameraRotation = CameraHelper.cameraDisplayOrientation(context, cameraId);
         Log.d("wtf", "cameraRotation " + cameraRotation);
         this.camera = CameraHelper.getCamera(cameraId);
-        cameraModeChangeFinish();
         camera.setDisplayOrientation(cameraRotation);
         if (orientationListener != null) orientationListener.enable();
         return camera;
