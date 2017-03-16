@@ -6,7 +6,6 @@ import android.graphics.Rect;
 import android.hardware.Camera;
 import android.support.annotation.NonNull;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -23,6 +22,7 @@ import nesto.camera.callback.OnPictureTakeListener;
 import nesto.camera.callback.OnPreviewSizeChangeListener;
 import nesto.camera.util.CameraHelper;
 import nesto.camera.util.FocusHelper;
+import nesto.camera.util.Print;
 import rx.Observable;
 import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
@@ -109,7 +109,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
                             break;
                     }
                 }, (throwable) -> {
-                    throwable.printStackTrace();
+                    Print.error(throwable);
                     initOnChangeListener();
                 });
     }
@@ -127,18 +127,18 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     }
 
     @Override public void surfaceCreated(SurfaceHolder holder) {
-        Log.d("wtf", "surfaceCreated");
+        Print.log("surfaceCreated");
         surfaceCreated = true;
         startPreview();
     }
 
     @Override public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-        Log.d("wtf", "surfaceChanged");
+        Print.log("surfaceChanged");
         surfaceCreated = true;
     }
 
     @Override public void surfaceDestroyed(SurfaceHolder holder) {
-        Log.d("wtf", "surfaceDestroyed");
+        Print.log("surfaceDestroyed");
         surfaceCreated = false;
     }
 
@@ -148,18 +148,18 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(camera -> {
-                    Log.d("wtf", "open camera");
+                    Print.log("open camera");
                     if (camera == null) return;
 
                     this.camera = camera;
                     initCameraConfig();
                     cameraReleased = false;
                     if (surfaceCreated) {
-                        Log.d("wtf", "setPreviewDisplay");
+                        Print.log("setPreviewDisplay");
                         startPreview();
                     }
                     cameraModeChangeFinish();
-                }, Throwable::printStackTrace);
+                }, Print::error);
     }
 
     private synchronized Camera getCamera() {
@@ -167,7 +167,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
                 ? CameraHelper.getFrontCameraId()
                 : CameraHelper.getBackCameraId();
         cameraRotation = CameraHelper.cameraDisplayOrientation(context, cameraId);
-        Log.d("wtf", "cameraRotation " + cameraRotation);
+        Print.log("cameraRotation " + cameraRotation);
         this.camera = CameraHelper.getCamera(cameraId);
         camera.setDisplayOrientation(cameraRotation);
         if (orientationListener != null) orientationListener.enable();
@@ -179,14 +179,14 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         try {
             camera.autoFocus(this);
         } catch (Exception e) {
-            e.printStackTrace();
+            Print.error(e);
         }
 
         Camera.Parameters parameters = camera.getParameters();
         Camera.Size previewSize = CameraHelper.getBestPreviewSize(parameters,
                 desiredSize == null ? CameraHelper.SCREEN_WIDTH : desiredSize.x,
                 desiredSize == null ? CameraHelper.SCREEN_HEIGHT : desiredSize.y);
-        Log.d("wtf", "previewSize width " + previewSize.width + " height " + previewSize.height);
+        Print.log("previewSize width " + previewSize.width + " height " + previewSize.height);
         parameters.setPreviewSize(previewSize.width, previewSize.height);
         if (onPreviewSizeChangeListener != null) {
             onPreviewSizeChangeListener
@@ -195,7 +195,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
         Camera.Size pictureSize = CameraHelper.getBestPictureSize(parameters,
                 previewSize.width, previewSize.height);
-        Log.d("wtf", "pictureSize width " + pictureSize.width + " height " + pictureSize.height);
+        Print.log("pictureSize width " + pictureSize.width + " height " + pictureSize.height);
         parameters.setPictureSize(pictureSize.width, pictureSize.height);
         camera.setParameters(parameters);
     }
@@ -209,7 +209,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
             cameraReleased = true;
             if (orientationListener != null) orientationListener.disable();
         } catch (Exception e) {
-            e.printStackTrace();
+            Print.error(e);
         }
     }
 
@@ -219,7 +219,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
             camera.setPreviewDisplay(holder);
             camera.startPreview();
         } catch (IOException e) {
-            e.printStackTrace();
+            Print.error(e);
         }
     }
 
@@ -228,7 +228,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         try {
             camera.stopPreview();
         } catch (Exception e) {
-            e.printStackTrace();
+            Print.error(e);
         }
     }
 
@@ -297,7 +297,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
                 parameters.setFocusAreas(focusAreas);
             }
 
-            Log.d("wtf", "focus area " + focusRect.toString());
+            Print.log("focus area " + focusRect.toString());
 
             Rect meteringRect = FocusHelper.tapEventToFocusArea(event, useFrontCamera,
                     cameraRotation, this, 1.5f);
@@ -309,12 +309,12 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
             camera.setParameters(parameters);
         } catch (Exception e) {
-            e.printStackTrace();
+            Print.error(e);
         }
     }
 
     @Override public void onAutoFocus(boolean success, Camera camera) {
-        Log.d("wtf", "onAutoFocus");
+        Print.log("onAutoFocus");
         if (onFocusListener == null) return;
         onFocusListener.onEndFocus();
     }
@@ -327,7 +327,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
                 camera.takePicture(null, null, this);
                 pictureTakenFinished = false;
             } catch (Exception e) {
-                e.printStackTrace();
+                Print.error(e);
                 pictureTakenFinished = true;
             }
         }

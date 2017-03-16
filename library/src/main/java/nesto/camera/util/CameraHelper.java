@@ -71,7 +71,7 @@ import java.util.List;
                     : Camera.Parameters.FLASH_MODE_OFF);
             camera.setParameters(parameters);
         } catch (Exception e) {
-            e.printStackTrace();
+            Print.error(e);
         }
     }
 
