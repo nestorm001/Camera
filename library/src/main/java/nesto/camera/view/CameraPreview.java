@@ -144,12 +144,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
     public synchronized void openCamera() {
         Observable.create((Observable.OnSubscribe<Camera>)
-                subscriber -> {
-                    cameraId = useFrontCamera
-                            ? CameraHelper.getFrontCameraId()
-                            : CameraHelper.getBackCameraId();
-                    subscriber.onNext(CameraHelper.getCamera(cameraId));
-                })
+                subscriber -> subscriber.onNext(getCamera()))
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(camera -> {
@@ -163,8 +158,20 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
                         Log.d("wtf", "setPreviewDisplay");
                         startPreview();
                     }
-                    cameraModeChangeFinish();
                 }, Throwable::printStackTrace);
+    }
+
+    private synchronized Camera getCamera() {
+        cameraId = useFrontCamera
+                ? CameraHelper.getFrontCameraId()
+                : CameraHelper.getBackCameraId();
+        cameraRotation = CameraHelper.cameraDisplayOrientation(context, cameraId);
+        Log.d("wtf", "cameraRotation " + cameraRotation);
+        this.camera = CameraHelper.getCamera(cameraId);
+        cameraModeChangeFinish();
+        camera.setDisplayOrientation(cameraRotation);
+        if (orientationListener != null) orientationListener.enable();
+        return camera;
     }
 
     private void initCameraConfig() {
@@ -191,10 +198,6 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         Log.d("wtf", "pictureSize width " + pictureSize.width + " height " + pictureSize.height);
         parameters.setPictureSize(pictureSize.width, pictureSize.height);
         camera.setParameters(parameters);
-
-        cameraRotation = CameraHelper.cameraDisplayOrientation(context, cameraId);
-        camera.setDisplayOrientation(cameraRotation);
-        if (orientationListener != null) orientationListener.enable();
     }
 
     public synchronized void stopCamera() {
