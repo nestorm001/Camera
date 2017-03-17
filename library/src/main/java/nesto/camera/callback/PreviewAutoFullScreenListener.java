@@ -25,6 +25,7 @@ public class PreviewAutoFullScreenListener implements OnPreviewSizeChangeListene
         isScreenPortrait = point.x < point.y;
         viewWidth = point.x;
         viewHeight = point.y;
+        this.cameraPreview = cameraPreview;
     }
 
     public PreviewAutoFullScreenListener(Activity activity, CameraPreview cameraPreview,
@@ -32,7 +33,6 @@ public class PreviewAutoFullScreenListener implements OnPreviewSizeChangeListene
         this(activity, cameraPreview);
         viewWidth = width;
         viewHeight = height;
-        this.cameraPreview = cameraPreview;
     }
 
     @Override public void onPreviewSizeChange(int width, int height) {
