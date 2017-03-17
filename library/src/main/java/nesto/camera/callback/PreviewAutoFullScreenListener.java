@@ -15,45 +15,44 @@ import nesto.camera.view.CameraPreview;
 
 public class PreviewAutoFullScreenListener implements OnPreviewSizeChangeListener {
 
-    private boolean isPortrait;
+    private boolean isScreenPortrait;
     private CameraPreview cameraPreview;
-    private int viewSmallerSide;
-    private int viewBiggerSide;
+    private int viewWidth;
+    private int viewHeight;
 
     public PreviewAutoFullScreenListener(Activity activity, CameraPreview cameraPreview) {
         Point point = CameraHelper.getRealScreenSize(activity);
-        isPortrait = point.x < point.y;
-        viewSmallerSide = Math.min(point.x, point.y);
-        viewBiggerSide = Math.max(point.x, point.y);
-        this.cameraPreview = cameraPreview;
+        isScreenPortrait = point.x < point.y;
+        viewWidth = point.x;
+        viewHeight = point.y;
     }
 
     public PreviewAutoFullScreenListener(Activity activity, CameraPreview cameraPreview,
-                                         int smaller, int bigger) {
+                                         int width, int height) {
         this(activity, cameraPreview);
-        viewSmallerSide = Math.min(smaller, bigger);
-        viewBiggerSide = Math.max(smaller, bigger);
+        viewWidth = width;
+        viewHeight = height;
+        this.cameraPreview = cameraPreview;
     }
 
     @Override public void onPreviewSizeChange(int width, int height) {
         ViewGroup.LayoutParams params = cameraPreview.getLayoutParams();
-        int bigger = Math.max(width, height);
-        int smaller = Math.min(width, height);
-        float biggerRatio = 1.f * viewBiggerSide / bigger;
-        float smallerRatio = 1.f * viewSmallerSide / smaller;
-
-        int realWidth;
-        int realHeight;
-        if (biggerRatio > smallerRatio) {
-            realHeight = viewBiggerSide;
-            realWidth = realHeight * smaller / bigger;
-        } else {
-            realWidth = viewSmallerSide;
-            realHeight = realWidth * bigger / smaller;
+        if (isScreenPortrait) {
+            int temp = height;
+            //noinspection SuspiciousNameCombination
+            height = width;
+            width = temp;
         }
+        float heightRatio = 1.f * viewHeight / height;
+        float widthRatio = 1.f * viewWidth / width;
 
-        params.width = isPortrait ? realWidth : realHeight;
-        params.height = isPortrait ? realHeight : realWidth;
+        if (heightRatio > widthRatio) {
+            params.height = viewHeight;
+            params.width = params.height * width / height;
+        } else {
+            params.width = viewWidth;
+            params.height = params.width * height / width;
+        }
 
         Print.log("view width " + params.width + " height " + params.height);
         cameraPreview.requestLayout();
