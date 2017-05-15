@@ -14,6 +14,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.reactivex.Observable;
+import io.reactivex.ObservableOnSubscribe;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.schedulers.Schedulers;
 import nesto.camera.callback.CameraOrientationListener;
 import nesto.camera.callback.OnChangeFinishListener;
 import nesto.camera.callback.OnChangeListener;
@@ -23,10 +28,6 @@ import nesto.camera.callback.OnPreviewSizeChangeListener;
 import nesto.camera.util.CameraHelper;
 import nesto.camera.util.FocusHelper;
 import nesto.camera.util.Print;
-import rx.Observable;
-import rx.Subscription;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.schedulers.Schedulers;
 
 import static android.hardware.Camera.Parameters.FLASH_MODE_ON;
 import static android.hardware.Camera.Parameters.FOCUS_MODE_AUTO;
@@ -60,7 +61,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     private CameraOrientationListener orientationListener;
 
     private OnChangeListener onChangeListener;
-    private Subscription onChangeSubscription;
+    private Disposable onChangeSubscription;
 
     private Context context;
     private Point desiredSize;
@@ -83,14 +84,14 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
     private void initOnChangeListener() {
         onChangeSubscription = Observable.create(
-                (Observable.OnSubscribe<OnChangeListener.OnChangeEvent>) subscriber ->
+                (ObservableOnSubscribe<OnChangeListener.OnChangeEvent>) observableEmitter ->
                         onChangeListener = new OnChangeListener() {
                             @Override public void switchCamera() {
-                                subscriber.onNext(SWITCH_CAMERA);
+                                observableEmitter.onNext(SWITCH_CAMERA);
                             }
 
                             @Override public void switchFlashMode() {
-                                subscriber.onNext(SWITCH_FLASH_MODE);
+                                observableEmitter.onNext(SWITCH_FLASH_MODE);
                             }
                         }).subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.io())
@@ -143,14 +144,14 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     }
 
     public synchronized void openCamera() {
-        Observable.create((Observable.OnSubscribe<Camera>)
-                subscriber -> subscriber.onNext(getCamera()))
+        Observable.create((ObservableOnSubscribe<Camera>)
+                subscriber -> {
+                    subscriber.onNext(getCamera());
+                })
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(camera -> {
                     Print.log("open camera");
-                    if (camera == null) return;
-
                     this.camera = camera;
                     initCameraConfig();
                     cameraReleased = false;
@@ -374,8 +375,8 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     }
 
     public void release() {
-        if (onChangeSubscription != null && !onChangeSubscription.isUnsubscribed()) {
-            onChangeSubscription.unsubscribe();
+        if (onChangeSubscription != null && !onChangeSubscription.isDisposed()) {
+            onChangeSubscription.dispose();
         }
     }
 }
